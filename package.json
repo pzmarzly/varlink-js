@@ -1,0 +1,15 @@
+{
+  "name": "varlink-js",
+  "module": "index.ts",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "tsup": "^8.1.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "tsup"
+  }
+}

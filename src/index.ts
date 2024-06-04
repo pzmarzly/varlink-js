@@ -1,3 +1,3 @@
 export function hi() {
-  console.log("Hello!");
+	console.log('Hello!');
 }

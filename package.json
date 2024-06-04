@@ -7,9 +7,11 @@
   "type": "module",
   "devDependencies": {
     "tsup": "^8.1.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "xo": "^0.58.0"
   },
   "scripts": {
-    "build": "tsup"
+    "build": "xo && bun test && tsup",
+    "fmt": "xo --fix"
   }
 }

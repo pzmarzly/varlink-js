@@ -1,8 +1,8 @@
-import type {
-  VarlinkConnectionClient,
-  VarlinkDictionary,
-  VarlinkProtocolClient,
-} from "./proto/proto";
+import type { VarlinkConnectionProtocol } from "./connection/connection";
+import {
+  VarlinkClientSideConnection,
+  type VarlinkDictionary,
+} from "./protocol/protocol";
 
 export class VarlinkError extends Error {
   constructor(
@@ -15,16 +15,17 @@ export class VarlinkError extends Error {
 }
 
 export class VarlinkClient {
-  private conn?: VarlinkConnectionClient;
-  constructor(private proto: VarlinkProtocolClient) {}
+  private conn?: VarlinkClientSideConnection;
+  constructor(private proto: VarlinkConnectionProtocol) {}
 
   async connect(): Promise<void> {
-    await this._connect();
+    await this.#connect();
   }
 
-  async _connect(): Promise<VarlinkConnectionClient> {
+  async #connect(): Promise<VarlinkClientSideConnection> {
     if (!this.conn) {
-      this.conn = await this.proto.open();
+      let rawConn = await this.proto.open();
+      this.conn = new VarlinkClientSideConnection(rawConn);
     }
     return this.conn;
   }
@@ -44,7 +45,7 @@ export class VarlinkClient {
     method: string,
     parameters: VarlinkDictionary
   ): Promise<VarlinkDictionary> {
-    let conn = await this._connect();
+    let conn = await this.#connect();
     await conn.send({
       method,
       parameters,
@@ -63,7 +64,7 @@ export class VarlinkClient {
     method: string,
     parameters: VarlinkDictionary
   ): Promise<void> {
-    let conn = await this._connect();
+    let conn = await this.#connect();
     await conn.send({
       method,
       parameters,
@@ -78,7 +79,7 @@ export class VarlinkClient {
     parameters: VarlinkDictionary,
     callbackFn: (err: VarlinkError | null, data: VarlinkDictionary) => void
   ): Promise<void> {
-    let conn = await this._connect();
+    let conn = await this.#connect();
     await conn.send({
       method,
       parameters,

@@ -1,19 +1,18 @@
 import {
-  VarlinkConnectionClient,
   type VarlinkConnection,
-  type VarlinkProtocolClient,
-} from "./proto";
+  type VarlinkConnectionProtocol,
+} from "./connection";
 import type { SocketConnectOpts } from "node:net";
 import { Socket } from "node:net";
 import { once } from "node:events";
 
-export class SocketProtocolClient implements VarlinkProtocolClient {
+export class SocketConnectionProtocol implements VarlinkConnectionProtocol {
   constructor(private socketOpts: SocketConnectOpts & { timeout: number }) {}
 
-  async open(): Promise<VarlinkConnectionClient> {
+  async open(): Promise<SocketConnection> {
     let conn = new SocketConnection(this.socketOpts);
     await conn.connect();
-    return new VarlinkConnectionClient(conn);
+    return conn;
   }
 }
 

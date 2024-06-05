@@ -1,9 +1,9 @@
 import { test, expect } from "bun:test";
-import { SocketProtocolClient } from "./proto/socket";
 import { VarlinkClient } from "./client";
+import { SocketConnectionProtocol } from "./connection/node_socket";
 
 function getClient(): VarlinkClient {
-  let proto = new SocketProtocolClient({
+  let proto = new SocketConnectionProtocol({
     host: "127.0.0.1",
     port: 12345,
     timeout: 10000,

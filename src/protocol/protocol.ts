@@ -1,3 +1,5 @@
+import type { VarlinkConnection } from "../connection/connection";
+
 export type VarlinkDictionary = Record<string, any>;
 
 export type VarlinkRequest = {
@@ -54,17 +56,7 @@ export function deserializeVarlinkResponse(buffer: Buffer): VarlinkResponse {
   return partial;
 }
 
-export interface VarlinkProtocolClient {
-  open(): Promise<VarlinkConnectionClient>;
-}
-
-export interface VarlinkConnection {
-  send(request: Buffer): Promise<void>;
-  recv(): Promise<Buffer>;
-  close(): Promise<void>;
-}
-
-export class VarlinkConnectionClient {
+export class VarlinkClientSideConnection {
   constructor(private conn: VarlinkConnection) {}
 
   async send(request: VarlinkRequest): Promise<void> {

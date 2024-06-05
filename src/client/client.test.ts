@@ -37,36 +37,30 @@ test('passes reference tests', async () => {
     'org.varlink.certification.Start',
     {},
   );
-  console.log(returnValueStart);
 
   const returnValue01 = await client.call('org.varlink.certification.Test01', {
     client_id: returnValueStart.client_id,
   });
-  console.log(returnValue01);
 
   const returnValue02 = await client.call('org.varlink.certification.Test02', {
     client_id: returnValueStart.client_id,
     bool: returnValue01.bool,
   });
-  console.log(returnValue02);
 
   const returnValue03 = await client.call('org.varlink.certification.Test03', {
     client_id: returnValueStart.client_id,
     int: returnValue02.int,
   });
-  console.log(returnValue03);
 
   const returnValue04 = await client.call('org.varlink.certification.Test04', {
     client_id: returnValueStart.client_id,
     float: returnValue03.float,
   });
-  console.log(returnValue04);
 
   const returnValue05 = await client.call('org.varlink.certification.Test05', {
     client_id: returnValueStart.client_id,
     string: returnValue04.string,
   });
-  console.log(returnValue05);
 
   const returnValue06 = await client.call('org.varlink.certification.Test06', {
     client_id: returnValueStart.client_id,
@@ -75,25 +69,21 @@ test('passes reference tests', async () => {
     float: returnValue05.float,
     string: returnValue05.string,
   });
-  console.log(returnValue06);
 
   const returnValue07 = await client.call('org.varlink.certification.Test07', {
     client_id: returnValueStart.client_id,
     struct: returnValue06.struct,
   });
-  console.log(returnValue07);
 
   const returnValue08 = await client.call('org.varlink.certification.Test08', {
     client_id: returnValueStart.client_id,
     map: returnValue07.map,
   });
-  console.log(returnValue08);
 
   const returnValue09 = await client.call('org.varlink.certification.Test09', {
     client_id: returnValueStart.client_id,
     set: returnValue08.set,
   });
-  console.log(returnValue09);
 
   const returnValue10: any[] = [];
   await client.callStream(
@@ -107,7 +97,6 @@ test('passes reference tests', async () => {
       returnValue10.push(data);
     },
   );
-  console.log(returnValue10);
 
   await client.callOneshot('org.varlink.certification.Test11', {
     client_id: returnValueStart.client_id,
@@ -118,7 +107,5 @@ test('passes reference tests', async () => {
     'org.varlink.certification.End',
     returnValueStart,
   );
-  console.log(returnValueEnd);
-
   expect(returnValueEnd.all_ok).toBeTrue();
 });

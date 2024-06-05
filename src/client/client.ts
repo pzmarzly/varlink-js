@@ -1,8 +1,8 @@
-import type { VarlinkConnectionProtocol } from "./connection/connection";
+import type { VarlinkConnectionProtocol } from "../connection/connection";
 import {
   VarlinkClientSideConnection,
   type VarlinkDictionary,
-} from "./protocol/protocol";
+} from "../protocol/protocol";
 
 export class VarlinkError extends Error {
   constructor(

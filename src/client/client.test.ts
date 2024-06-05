@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { VarlinkClient } from "./client";
-import { SocketConnectionProtocol } from "./connection/node_socket";
+import { SocketConnectionProtocol } from "../connection/node_socket";
 
 function getClient(): VarlinkClient {
   let proto = new SocketConnectionProtocol({

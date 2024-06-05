@@ -1,13 +1,13 @@
-import type { VarlinkConnectionProtocol } from "../connection/connection";
+import type {VarlinkConnectionProtocol} from '../connection/connection';
 import {
   VarlinkClientSideConnection,
   type VarlinkDictionary,
-} from "../protocol/protocol";
+} from '../protocol/protocol';
 
 export class VarlinkError extends Error {
   constructor(
     public type_: string,
-    public parameters: VarlinkDictionary
+    public parameters: VarlinkDictionary,
   ) {
     super(`${type_} ${JSON.stringify(parameters)}`);
     this.name = this.constructor.name;
@@ -16,18 +16,10 @@ export class VarlinkError extends Error {
 
 export class VarlinkClient {
   private conn?: VarlinkClientSideConnection;
-  constructor(private proto: VarlinkConnectionProtocol) {}
+  constructor(private readonly proto: VarlinkConnectionProtocol) {}
 
   async connect(): Promise<void> {
     await this.#connect();
-  }
-
-  async #connect(): Promise<VarlinkClientSideConnection> {
-    if (!this.conn) {
-      let rawConn = await this.proto.open();
-      this.conn = new VarlinkClientSideConnection(rawConn);
-    }
-    return this.conn;
   }
 
   async disconnect(): Promise<void> {
@@ -43,9 +35,9 @@ export class VarlinkClient {
 
   async call(
     method: string,
-    parameters: VarlinkDictionary
+    parameters: VarlinkDictionary,
   ): Promise<VarlinkDictionary> {
-    let conn = await this.#connect();
+    const conn = await this.#connect();
     await conn.send({
       method,
       parameters,
@@ -53,18 +45,19 @@ export class VarlinkClient {
       more: false,
       upgrade: false,
     });
-    let resp = await conn.recv();
+    const resp = await conn.recv();
     if (resp.error) {
       throw new VarlinkError(resp.error, resp.parameters);
     }
+
     return resp.parameters;
   }
 
   async callOneshot(
     method: string,
-    parameters: VarlinkDictionary
+    parameters: VarlinkDictionary,
   ): Promise<void> {
-    let conn = await this.#connect();
+    const conn = await this.#connect();
     await conn.send({
       method,
       parameters,
@@ -77,9 +70,12 @@ export class VarlinkClient {
   async callStream(
     method: string,
     parameters: VarlinkDictionary,
-    callbackFn: (err: VarlinkError | null, data: VarlinkDictionary) => void
+    callbackFunction: (
+      error: VarlinkError | undefined,
+      data: VarlinkDictionary
+    ) => void,
   ): Promise<void> {
-    let conn = await this.#connect();
+    const conn = await this.#connect();
     await conn.send({
       method,
       parameters,
@@ -87,17 +83,25 @@ export class VarlinkClient {
       more: true,
       upgrade: false,
     });
-    while (true) {
-      let resp = await conn.recv();
+    let continues = true;
+    while (continues) {
+      const resp = await conn.recv();
       if (resp.error) {
-        callbackFn(new VarlinkError(resp.error, resp.parameters), {});
+        callbackFunction(new VarlinkError(resp.error, resp.parameters), {});
         continue;
       }
-      callbackFn(null, resp.parameters);
-      if (resp.continues) {
-        continue;
-      }
-      break;
+
+      callbackFunction(undefined, resp.parameters);
+      continues = resp.continues ?? false;
     }
+  }
+
+  async #connect(): Promise<VarlinkClientSideConnection> {
+    if (!this.conn) {
+      const rawConn = await this.proto.open();
+      this.conn = new VarlinkClientSideConnection(rawConn);
+    }
+
+    return this.conn;
   }
 }

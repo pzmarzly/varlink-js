@@ -1,9 +1,9 @@
-export interface VarlinkConnectionProtocol {
+export type VarlinkConnectionProtocol = {
   open(): Promise<VarlinkConnection>;
-}
+};
 
-export interface VarlinkConnection {
-  send(request: Buffer): Promise<void>;
-  recv(): Promise<Buffer>;
+export type VarlinkConnection = {
+  send(request: Uint8Array): Promise<void>;
+  recv(): Promise<Uint8Array>;
   close(): Promise<void>;
-}
+};

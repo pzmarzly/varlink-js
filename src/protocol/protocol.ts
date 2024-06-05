@@ -1,4 +1,4 @@
-import type { VarlinkConnection } from "../connection/connection";
+import type {VarlinkConnection} from '../connection/connection';
 
 export type VarlinkDictionary = Record<string, any>;
 
@@ -10,22 +10,36 @@ export type VarlinkRequest = {
   upgrade: boolean;
 };
 
-export function serializeVarlinkRequest(request: VarlinkRequest): Buffer {
-  let partial: Partial<VarlinkRequest> = { method: request.method };
-  if (Object.keys(request.parameters).length > 0)
+export function serializeVarlinkRequest(request: VarlinkRequest): Uint8Array {
+  const partial: Partial<VarlinkRequest> = {method: request.method};
+
+  if (Object.keys(request.parameters).length > 0) {
     partial.parameters = request.parameters;
-  if (request.oneway) partial.oneway = request.oneway;
-  if (request.more) partial.more = request.more;
-  if (request.upgrade) partial.upgrade = request.upgrade;
-  return Buffer.from(JSON.stringify(partial));
+  }
+
+  if (request.oneway) {
+    partial.oneway = request.oneway;
+  }
+
+  if (request.more) {
+    partial.more = request.more;
+  }
+
+  if (request.upgrade) {
+    partial.upgrade = request.upgrade;
+  }
+
+  return new TextEncoder().encode(JSON.stringify(partial));
 }
 
-export function deserializeVarlinkRequest(buffer: Buffer): VarlinkRequest {
-  let partial: VarlinkRequest = JSON.parse(buffer.toString());
-  if (!partial.parameters) partial.parameters = {};
-  if (!partial.oneway) partial.oneway = false;
-  if (!partial.more) partial.more = false;
-  if (!partial.upgrade) partial.upgrade = false;
+export function deserializeVarlinkRequest(buffer: Uint8Array): VarlinkRequest {
+  const partial = JSON.parse(
+    new TextDecoder().decode(buffer),
+  ) as VarlinkRequest;
+  partial.parameters ||= {};
+  partial.oneway ||= false;
+  partial.more ||= false;
+  partial.upgrade ||= false;
   return partial;
 }
 
@@ -43,21 +57,37 @@ export type VarlinkErrorResponse = {
 
 export type VarlinkResponse = VarlinkSuccessResponse | VarlinkErrorResponse;
 
-export function serializeVarlinkResponse(response: VarlinkResponse): Buffer {
-  let partial: Partial<VarlinkResponse> = { parameters: response.parameters };
-  if (response.error !== undefined) partial.error = response.error;
-  if (response.continues) partial.continues = response.continues;
-  return Buffer.from(JSON.stringify(response));
+export function serializeVarlinkResponse(
+  response: VarlinkResponse,
+): Uint8Array {
+  const partial: Partial<VarlinkResponse> = {parameters: response.parameters};
+
+  if (response.error !== undefined) {
+    partial.error = response.error;
+  }
+
+  if (response.continues) {
+    partial.continues = response.continues;
+  }
+
+  return new TextEncoder().encode(JSON.stringify(response));
 }
 
-export function deserializeVarlinkResponse(buffer: Buffer): VarlinkResponse {
-  let partial: VarlinkResponse = JSON.parse(buffer.toString());
-  if (!partial.error && !partial.continues) partial.continues = false;
+export function deserializeVarlinkResponse(
+  buffer: Uint8Array,
+): VarlinkResponse {
+  const partial = JSON.parse(
+    new TextDecoder().decode(buffer),
+  ) as VarlinkResponse;
+  if (!partial.error) {
+    partial.continues ||= false;
+  }
+
   return partial;
 }
 
 export class VarlinkClientSideConnection {
-  constructor(private conn: VarlinkConnection) {}
+  constructor(private readonly conn: VarlinkConnection) {}
 
   async send(request: VarlinkRequest): Promise<void> {
     await this.conn.send(serializeVarlinkRequest(request));

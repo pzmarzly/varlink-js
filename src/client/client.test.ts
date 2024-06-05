@@ -1,116 +1,124 @@
-import { test, expect } from "bun:test";
-import { VarlinkClient } from "./client";
-import { SocketConnectionProtocol } from "../connection/node_socket";
+/* eslint "@typescript-eslint/no-unsafe-assignment": "off" */
+/* eslint "@typescript-eslint/naming-convention": "off" */
+
+import {test, expect} from 'bun:test';
+import {SocketConnectionProtocol} from '../connection/node-socket';
+import {VarlinkClient} from './client';
 
 function getClient(): VarlinkClient {
-  let proto = new SocketConnectionProtocol({
-    host: "127.0.0.1",
-    port: 12345,
-    timeout: 10000,
+  const proto = new SocketConnectionProtocol({
+    host: '127.0.0.1',
+    port: 12_345,
+    timeout: 10_000,
   });
   return new VarlinkClient(proto);
 }
 
-test("connects to the reference server", async () => {
-  let client = getClient();
-  let info = await client.call("org.varlink.service.GetInfo", {});
+test('connects to the reference server', async () => {
+  const client = getClient();
+  const info = await client.call('org.varlink.service.GetInfo', {});
   expect(info).toBeObject();
   expect(info.interfaces).toEqual([
-    "org.varlink.service",
-    "org.varlink.certification",
+    'org.varlink.service',
+    'org.varlink.certification',
   ]);
 });
 
-test("exposes error details", async () => {
-  let client = getClient();
-  expect(async () => client.call("org.varlink.unknown", {})).toThrow(
-    `org.varlink.service.InterfaceNotFound {"interface":"org.varlink"}`
+test('exposes error details', async () => {
+  const client = getClient();
+  expect(async () => client.call('org.varlink.unknown', {})).toThrow(
+    'org.varlink.service.InterfaceNotFound {"interface":"org.varlink"}',
   );
 });
 
-test("passes reference tests", async () => {
-  let client = getClient();
-  let retS = await client.call("org.varlink.certification.Start", {});
-  console.log(retS);
-
-  let ret01 = await client.call("org.varlink.certification.Test01", {
-    client_id: retS.client_id,
-  });
-  console.log(ret01);
-
-  let ret02 = await client.call("org.varlink.certification.Test02", {
-    client_id: retS.client_id,
-    bool: ret01.bool,
-  });
-  console.log(ret02);
-
-  let ret03 = await client.call("org.varlink.certification.Test03", {
-    client_id: retS.client_id,
-    int: ret02.int,
-  });
-  console.log(ret03);
-
-  let ret04 = await client.call("org.varlink.certification.Test04", {
-    client_id: retS.client_id,
-    float: ret03.float,
-  });
-  console.log(ret04);
-
-  let ret05 = await client.call("org.varlink.certification.Test05", {
-    client_id: retS.client_id,
-    string: ret04.string,
-  });
-  console.log(ret05);
-
-  let ret06 = await client.call("org.varlink.certification.Test06", {
-    client_id: retS.client_id,
-    bool: ret05.bool,
-    int: ret05.int,
-    float: ret05.float,
-    string: ret05.string,
-  });
-  console.log(ret06);
-
-  let ret07 = await client.call("org.varlink.certification.Test07", {
-    client_id: retS.client_id,
-    struct: ret06.struct,
-  });
-  console.log(ret07);
-
-  let ret08 = await client.call("org.varlink.certification.Test08", {
-    client_id: retS.client_id,
-    map: ret07.map,
-  });
-  console.log(ret08);
-
-  let ret09 = await client.call("org.varlink.certification.Test09", {
-    client_id: retS.client_id,
-    set: ret08.set,
-  });
-  console.log(ret09);
-
-  let ret10: any[] = [];
-  await client.callStream(
-    "org.varlink.certification.Test10",
-    {
-      client_id: retS.client_id,
-      mytype: ret09.mytype,
-    },
-    (err, data) => {
-      expect(err).toBeNull();
-      ret10.push(data);
-    }
+test('passes reference tests', async () => {
+  const client = getClient();
+  const returnValueStart = await client.call(
+    'org.varlink.certification.Start',
+    {},
   );
-  console.log(ret10);
+  console.log(returnValueStart);
 
-  let ret11 = await client.callOneshot("org.varlink.certification.Test11", {
-    client_id: retS.client_id,
-    last_more_replies: ret10.map((x) => x.string),
+  const returnValue01 = await client.call('org.varlink.certification.Test01', {
+    client_id: returnValueStart.client_id,
   });
-  console.log(ret11);
+  console.log(returnValue01);
 
-  let retE = await client.call("org.varlink.certification.End", retS);
-  console.log(retE);
+  const returnValue02 = await client.call('org.varlink.certification.Test02', {
+    client_id: returnValueStart.client_id,
+    bool: returnValue01.bool,
+  });
+  console.log(returnValue02);
 
-  expect(retE.all_ok).toBeTrue();
+  const returnValue03 = await client.call('org.varlink.certification.Test03', {
+    client_id: returnValueStart.client_id,
+    int: returnValue02.int,
+  });
+  console.log(returnValue03);
+
+  const returnValue04 = await client.call('org.varlink.certification.Test04', {
+    client_id: returnValueStart.client_id,
+    float: returnValue03.float,
+  });
+  console.log(returnValue04);
+
+  const returnValue05 = await client.call('org.varlink.certification.Test05', {
+    client_id: returnValueStart.client_id,
+    string: returnValue04.string,
+  });
+  console.log(returnValue05);
+
+  const returnValue06 = await client.call('org.varlink.certification.Test06', {
+    client_id: returnValueStart.client_id,
+    bool: returnValue05.bool,
+    int: returnValue05.int,
+    float: returnValue05.float,
+    string: returnValue05.string,
+  });
+  console.log(returnValue06);
+
+  const returnValue07 = await client.call('org.varlink.certification.Test07', {
+    client_id: returnValueStart.client_id,
+    struct: returnValue06.struct,
+  });
+  console.log(returnValue07);
+
+  const returnValue08 = await client.call('org.varlink.certification.Test08', {
+    client_id: returnValueStart.client_id,
+    map: returnValue07.map,
+  });
+  console.log(returnValue08);
+
+  const returnValue09 = await client.call('org.varlink.certification.Test09', {
+    client_id: returnValueStart.client_id,
+    set: returnValue08.set,
+  });
+  console.log(returnValue09);
+
+  const returnValue10: any[] = [];
+  await client.callStream(
+    'org.varlink.certification.Test10',
+    {
+      client_id: returnValueStart.client_id,
+      mytype: returnValue09.mytype,
+    },
+    (error, data) => {
+      expect(error).toBeUndefined();
+      returnValue10.push(data);
+    },
+  );
+  console.log(returnValue10);
+
+  await client.callOneshot('org.varlink.certification.Test11', {
+    client_id: returnValueStart.client_id,
+    last_more_replies: returnValue10.map(x => x.string as string),
+  });
+
+  const returnValueEnd = await client.call(
+    'org.varlink.certification.End',
+    returnValueStart,
+  );
+  console.log(returnValueEnd);
+
+  expect(returnValueEnd.all_ok).toBeTrue();
 });

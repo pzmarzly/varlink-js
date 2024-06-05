@@ -14,5 +14,12 @@
     "build": "xo && tsup",
     "test": "bun test",
     "fmt": "xo --fix"
+  },
+  "xo": {
+    "space": true,
+    "rules": {
+      "import/extensions": "off",
+      "no-await-in-loop": "off"
+    }
   }
 }

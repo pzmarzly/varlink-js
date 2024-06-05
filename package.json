@@ -11,7 +11,8 @@
     "xo": "^0.58.0"
   },
   "scripts": {
-    "build": "xo && bun test && tsup",
+    "build": "xo && tsup",
+    "test": "bun test",
     "fmt": "xo --fix"
   }
 }

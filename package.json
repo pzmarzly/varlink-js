@@ -1,5 +1,15 @@
 {
   "name": "varlink-js",
+  "description": "Varlink client and server for Node.js and Bun.sh",
+  "author": "Pawel Zmarzly <pawo2500@gmail.com>",
+  "keywords": [
+    "varlink"
+  ],
+  "homepage": "https://github.com/pzmarzly/varlink-js",
+  "bugs": {
+    "url": "https://github.com/pzmarzly/varlink-js"
+  },
+  "license": "MIT",
   "version": "0.1.0",
   "type": "module",
   "devDependencies": {

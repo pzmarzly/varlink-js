@@ -44,11 +44,11 @@ test("connects to the reference server (typed)", async () => {
 
 test("exposes error details", async () => {
   const UnknownMethod = new VarlinkDynamicMethod(
-    "org.varlink.unknown.UnknownMethod"
+    "org.varlink.unknown.UnknownMethod",
   );
   const client = getClient();
-  expect(async () => client.call(UnknownMethod, {})).toThrow(
-    'org.varlink.service.InterfaceNotFound {"interface":"org.varlink.unknown"}'
+  expect(async () => await client.call(UnknownMethod, {})).toThrow(
+    'org.varlink.service.InterfaceNotFound {"interface":"org.varlink.unknown"}',
   );
 });
 
@@ -113,7 +113,7 @@ test("passes reference tests", async () => {
     async (error, data) => {
       expect(error).toBeUndefined();
       returnValue10.push(data);
-    }
+    },
   );
 
   await client.callOneshot(OrgVarlinkCertification.Test11, {
@@ -123,7 +123,7 @@ test("passes reference tests", async () => {
 
   const returnValueEnd = await client.call(
     OrgVarlinkCertification.End,
-    returnValueStart
+    returnValueStart,
   );
   expect(returnValueEnd.all_ok).toBeTrue();
 });

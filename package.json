@@ -6,12 +6,17 @@
   ],
   "type": "module",
   "devDependencies": {
-    "tsup": "^8.1.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^20.14.11",
+    "eslint": "8",
+    "eslint-config-love": "^56.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "tsup": "^8.2.2",
+    "typescript": "^5.5.3"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "eslint . && tsup",
     "test": "bun test",
-    "fmt": "false"
+    "fmt": "eslint --fix ."
   }
 }

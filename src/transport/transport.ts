@@ -3,17 +3,17 @@ import {
   serializeVarlinkRequest,
   type VarlinkRequest,
   type VarlinkResponse,
-} from '../protocol/protocol';
+} from "../protocol/protocol";
 
-export type VarlinkTransport = {
-  open(): Promise<VarlinkTransportChannel>;
-};
+export interface VarlinkTransport {
+  open: () => Promise<VarlinkTransportChannel>;
+}
 
-export type VarlinkTransportChannel = {
-  send(request: Uint8Array): Promise<void>;
-  recv(): Promise<Uint8Array>;
-  close(): Promise<void>;
-};
+export interface VarlinkTransportChannel {
+  send: (request: Uint8Array) => Promise<void>;
+  recv: () => Promise<Uint8Array>;
+  close: () => Promise<void>;
+}
 
 export class VarlinkClientSideTransport {
   constructor(private readonly transport: VarlinkTransport) {}

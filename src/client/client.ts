@@ -24,7 +24,7 @@ export class VarlinkClient {
 
   async call<M extends VarlinkMethod<any, any, any>>(
     method: M,
-    input: VarlinkMethodGetInput<M>
+    input: VarlinkMethodGetInput<M>,
   ): Promise<VarlinkMethodGetOutput<M>> {
     const chan = await this.#takeFromPool();
     await chan.send({
@@ -37,7 +37,7 @@ export class VarlinkClient {
     const resp = await chan.recv();
     await this.#backToPool(chan);
 
-    if (resp.error) {
+    if (resp.error !== undefined) {
       throw new VarlinkError(resp.error, resp.parameters);
     }
 
@@ -46,7 +46,7 @@ export class VarlinkClient {
 
   async callOneshot<M extends VarlinkMethod<any, any, any>>(
     method: M,
-    input: VarlinkMethodGetInput<M>
+    input: VarlinkMethodGetInput<M>,
   ): Promise<void> {
     const chan = await this.#takeFromPool();
     await chan.send({
@@ -64,8 +64,8 @@ export class VarlinkClient {
     input: VarlinkMethodGetInput<M>,
     callbackFunction: (
       error: VarlinkError | undefined,
-      data: VarlinkMethodGetOutput<M>
-    ) => Promise<void>
+      data: VarlinkMethodGetOutput<M>,
+    ) => Promise<void>,
   ): Promise<void> {
     const chan = await this.#takeFromPool();
     await chan.send({
@@ -78,15 +78,15 @@ export class VarlinkClient {
     let continues = true;
     while (continues) {
       const resp = await chan.recv();
-      if (resp.error) {
+      if (resp.error !== undefined) {
         await callbackFunction(
           new VarlinkError(resp.error, resp.parameters),
-          {} as VarlinkMethodGetOutput<M>
+          {} as VarlinkMethodGetOutput<M>,
         );
       } else {
         await callbackFunction(
           undefined,
-          resp.parameters as VarlinkMethodGetOutput<M>
+          resp.parameters as VarlinkMethodGetOutput<M>,
         );
       }
       continues = resp.continues ?? false;
@@ -97,7 +97,7 @@ export class VarlinkClient {
 
   async #takeFromPool(): Promise<VarlinkClientSideTransportChannel> {
     if (this.pool.length === 0) {
-      return this.transport.open();
+      return await this.transport.open();
     }
 
     return this.pool.shift()!;
@@ -110,6 +110,10 @@ export class VarlinkClient {
   async #drainPool(): Promise<void> {
     const pool = this.pool;
     this.pool = [];
-    await Promise.all(pool.map((chan) => chan.close));
+    await Promise.all(
+      pool.map(async (chan) => {
+        await chan.close();
+      }),
+    );
   }
 }

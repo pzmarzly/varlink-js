@@ -30,39 +30,39 @@ export type VarlinkMethodGetOutput<M> =
   M extends VarlinkMethod<any, any, infer Output> ? Output : never;
 
 export class VarlinkDynamicMethod extends VarlinkMethod<
-string,
-VarlinkDictionary,
-VarlinkDictionary
+  string,
+  VarlinkDictionary,
+  VarlinkDictionary
 > {
   constructor(name: string) {
     super(name, {}, {});
   }
 }
 
-export type VarlinkRequest = {
+export interface VarlinkRequest {
   method: string;
   parameters: VarlinkDictionary;
   oneway: boolean;
   more: boolean;
   upgrade: boolean;
-};
+}
 
 export function serializeVarlinkRequest(request: VarlinkRequest): Uint8Array {
-  const partial: Partial<VarlinkRequest> = {method: request.method};
+  const partial: Partial<VarlinkRequest> = { method: request.method };
 
   if (Object.keys(request.parameters).length > 0) {
     partial.parameters = request.parameters;
   }
 
-  if (request.oneway) {
+  if (request.oneway !== undefined) {
     partial.oneway = request.oneway;
   }
 
-  if (request.more) {
+  if (request.more !== undefined) {
     partial.more = request.more;
   }
 
-  if (request.upgrade) {
+  if (request.upgrade !== undefined) {
     partial.upgrade = request.upgrade;
   }
 
@@ -80,30 +80,30 @@ export function deserializeVarlinkRequest(buffer: Uint8Array): VarlinkRequest {
   return partial;
 }
 
-export type VarlinkSuccessResponse = {
+export interface VarlinkSuccessResponse {
   error: undefined;
   parameters: VarlinkDictionary;
   continues: boolean;
-};
+}
 
-export type VarlinkErrorResponse = {
+export interface VarlinkErrorResponse {
   error: string;
   parameters: VarlinkDictionary;
   continues: undefined;
-};
+}
 
 export type VarlinkResponse = VarlinkSuccessResponse | VarlinkErrorResponse;
 
 export function serializeVarlinkResponse(
   response: VarlinkResponse,
 ): Uint8Array {
-  const partial: Partial<VarlinkResponse> = {parameters: response.parameters};
+  const partial: Partial<VarlinkResponse> = { parameters: response.parameters };
 
   if (response.error !== undefined) {
     partial.error = response.error;
   }
 
-  if (response.continues) {
+  if (response.continues !== undefined) {
     partial.continues = response.continues;
   }
 
@@ -116,7 +116,7 @@ export function deserializeVarlinkResponse(
   const partial = JSON.parse(
     new TextDecoder().decode(buffer),
   ) as VarlinkResponse;
-  if (!partial.error) {
+  if (partial.error === undefined) {
     partial.continues ||= false;
   }
 

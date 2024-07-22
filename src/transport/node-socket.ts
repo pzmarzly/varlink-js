@@ -1,13 +1,13 @@
-import {type SocketConnectOpts, Socket} from 'node:net';
-import {once} from 'node:events';
+import { type SocketConnectOpts, Socket } from "node:net";
+import { once } from "node:events";
 import {
   type VarlinkTransport,
   type VarlinkTransportChannel,
-} from './transport';
+} from "./transport";
 
 export class SocketTransport implements VarlinkTransport {
   constructor(
-    private readonly socketOptions: SocketConnectOpts & {timeout: number},
+    private readonly socketOptions: SocketConnectOpts & { timeout: number },
   ) {}
 
   async open(): Promise<VarlinkTransportChannel> {
@@ -24,55 +24,55 @@ export class SocketTransportChannel implements VarlinkTransportChannel {
   private error?: Error;
 
   constructor(
-    private readonly socketOptions: SocketConnectOpts & {timeout: number},
+    private readonly socketOptions: SocketConnectOpts & { timeout: number },
   ) {
     this.socket = new Socket();
     this.chunks = [];
     this.messages = [];
 
     this.socket.setTimeout(socketOptions.timeout, () =>
-      this.socket.destroy(new Error('timeout exceeded')),
+      this.socket.destroy(new Error("timeout exceeded")),
     );
-    this.socket.on('data', data => {
+    this.socket.on("data", (data) => {
       this.chunks.push(data);
       const index = data.indexOf(0);
       if (index !== -1) {
         this._parseMessages();
       }
     });
-    this.socket.on('error', error => {
+    this.socket.on("error", (error) => {
       this.error = error;
     });
   }
 
   async connect(): Promise<void> {
     this.socket.connect(this.socketOptions);
-    await once(this.socket, 'connect');
+    await once(this.socket, "connect");
   }
 
   async send(request: Uint8Array): Promise<void> {
     const data = concatArrays([request, Uint8Array.from([0])]);
     if (!this.socket.write(data)) {
-      await once(this.socket, 'flush');
+      await once(this.socket, "flush");
     }
   }
 
   async recv(): Promise<Uint8Array> {
-    if (this.error) {
+    if (this.error != null) {
       const error = this.error;
       this.error = undefined;
       throw error;
     }
 
     while (this.messages.length === 0) {
-      await once(this.socket, 'data');
+      await once(this.socket, "data");
     }
 
     return this.messages.shift()!;
   }
 
   async close(): Promise<void> {
-    await new Promise<void>((resolve, _) => {
+    await new Promise<void>((resolve, reject) => {
       this.socket.end(resolve);
     });
   }

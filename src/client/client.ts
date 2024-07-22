@@ -1,8 +1,13 @@
 import {
-  VarlinkClientSideTransport,
-  VarlinkClientSideTransportChannel,
+  type VarlinkClientSideTransport,
+  type VarlinkClientSideTransportChannel,
 } from "../transport/transport";
-import { VarlinkError, type VarlinkDictionary } from "../protocol/protocol";
+import {
+  VarlinkError,
+  type VarlinkMethod,
+  type VarlinkMethodGetInput,
+  type VarlinkMethodGetOutput,
+} from "../protocol/protocol";
 
 export class VarlinkClient {
   private pool: VarlinkClientSideTransportChannel[] = [];
@@ -10,61 +15,62 @@ export class VarlinkClient {
 
   async connect(): Promise<void> {
     const chan = await this.#takeFromPool();
-    this.#backToPool(chan);
+    await this.#backToPool(chan);
   }
 
   async disconnect(): Promise<void> {
     await this.#drainPool();
   }
 
-  async call(
-    method: string,
-    parameters: VarlinkDictionary
-  ): Promise<VarlinkDictionary> {
+  async call<M extends VarlinkMethod<any, any, any>>(
+    method: M,
+    input: VarlinkMethodGetInput<M>
+  ): Promise<VarlinkMethodGetOutput<M>> {
     const chan = await this.#takeFromPool();
     await chan.send({
-      method,
-      parameters,
+      method: method.name,
+      parameters: input,
       oneway: false,
       more: false,
       upgrade: false,
     });
     const resp = await chan.recv();
-    this.#backToPool(chan);
+    await this.#backToPool(chan);
 
     if (resp.error) {
       throw new VarlinkError(resp.error, resp.parameters);
     }
-    return resp.parameters;
+
+    return resp.parameters as VarlinkMethodGetOutput<M>;
   }
 
-  async callOneshot(
-    method: string,
-    parameters: VarlinkDictionary
+  async callOneshot<M extends VarlinkMethod<any, any, any>>(
+    method: M,
+    input: VarlinkMethodGetInput<M>
   ): Promise<void> {
     const chan = await this.#takeFromPool();
     await chan.send({
-      method,
-      parameters,
+      method: method.name,
+      parameters: input,
       oneway: true,
       more: false,
       upgrade: false,
     });
-    this.#backToPool(chan);
+    await this.#backToPool(chan);
   }
 
-  async callStream(
-    method: string,
-    parameters: VarlinkDictionary,
+  async callStream<M extends VarlinkMethod<any, any, any>>(
+    method: M,
+    input: VarlinkMethodGetInput<M>,
     callbackFunction: (
       error: VarlinkError | undefined,
-      data: VarlinkDictionary
-    ) => void
+      data: VarlinkMethodGetOutput<M>
+    ) => Promise<void>
   ): Promise<void> {
     const chan = await this.#takeFromPool();
     await chan.send({
-      method,
-      parameters,
+      method: method.name,
+      parameters: input,
       oneway: false,
       more: true,
       upgrade: false,
@@ -73,14 +79,20 @@ export class VarlinkClient {
     while (continues) {
       const resp = await chan.recv();
       if (resp.error) {
-        callbackFunction(new VarlinkError(resp.error, resp.parameters), {});
-        continue;
+        await callbackFunction(
+          new VarlinkError(resp.error, resp.parameters),
+          {} as VarlinkMethodGetOutput<M>
+        );
+      } else {
+        await callbackFunction(
+          undefined,
+          resp.parameters as VarlinkMethodGetOutput<M>
+        );
       }
-
-      callbackFunction(undefined, resp.parameters);
       continues = resp.continues ?? false;
     }
-    this.#backToPool(chan);
+
+    await this.#backToPool(chan);
   }
 
   async #takeFromPool(): Promise<VarlinkClientSideTransportChannel> {
@@ -96,7 +108,7 @@ export class VarlinkClient {
   }
 
   async #drainPool(): Promise<void> {
-    let pool = this.pool;
+    const pool = this.pool;
     this.pool = [];
     await Promise.all(pool.map((chan) => chan.close));
   }

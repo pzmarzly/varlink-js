@@ -10,7 +10,7 @@
     "url": "https://github.com/pzmarzly/varlink-js"
   },
   "license": "MIT",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "devDependencies": {
     "@types/bun": "^1.1.6",
@@ -23,8 +23,9 @@
     "typescript": "^5.5.3"
   },
   "scripts": {
-    "build": "tsc && eslint . && tsup && cp README.md package.json LICENSE dist",
+    "build": "tsc && eslint . && tsup",
     "test": "bun test",
-    "fmt": "eslint --fix ."
+    "fmt": "eslint --fix .",
+    "publish": "cp README.md package.json LICENSE dist && npm publish ./dist"
   }
 }

@@ -1,38 +1,94 @@
-import { type SocketConnectOpts, Socket } from "node:net";
+import {
+  type SocketConnectOpts,
+  type ServerOpts,
+  Socket,
+  Server,
+  type ListenOptions,
+  type AddressInfo,
+} from "node:net";
 import { once } from "node:events";
 import {
-  type VarlinkTransport,
+  VarlinkClientSideTransportChannel,
+  type VarlinkClientSideTransport,
   type VarlinkTransportChannel,
+  VarlinkServerSideTransportChannel,
+  type VarlinkServerSideTransport,
 } from "./transport";
 
-export class SocketTransport implements VarlinkTransport {
+export class SocketClientSideTransport implements VarlinkClientSideTransport {
   constructor(
-    private readonly socketOptions: SocketConnectOpts & { timeout: number },
+    private readonly socketOptions: SocketConnectOpts & { timeout: number }
   ) {}
 
-  async open(): Promise<VarlinkTransportChannel> {
-    const chan = new SocketTransportChannel(this.socketOptions);
-    await chan.connect();
+  async connect(): Promise<VarlinkClientSideTransportChannel> {
+    const socket = new Socket();
+    const chan = new VarlinkClientSideTransportChannel(
+      new SocketTransportChannel(socket)
+    );
+
+    socket.setTimeout(this.socketOptions.timeout, () =>
+      socket.destroy(new Error("timeout exceeded"))
+    );
+    socket.connect(this.socketOptions);
+    await once(socket, "connect");
+
     return chan;
   }
 }
 
-export class SocketTransportChannel implements VarlinkTransportChannel {
-  private readonly socket: Socket;
-  private chunks: Uint8Array[];
-  private readonly messages: Uint8Array[];
-  private error?: Error;
+export class SocketServerSideTransport implements VarlinkServerSideTransport {
+  private server: Server;
 
   constructor(
-    private readonly socketOptions: SocketConnectOpts & { timeout: number },
+    private readonly serverOptions: ServerOpts &
+      ListenOptions & { timeout: number }
   ) {
-    this.socket = new Socket();
+    this.server = new Server(serverOptions);
+    this.server.on("error", (err) => {
+      throw err;
+    });
+  }
+
+  onClientConnected(
+    callback: (chan: VarlinkServerSideTransportChannel) => void
+  ): void {
+    this.server.on("connection", (socket) => {
+      const chan = new VarlinkServerSideTransportChannel(
+        new SocketTransportChannel(socket)
+      );
+      socket.setTimeout(this.serverOptions.timeout, () =>
+        socket.destroy(new Error("timeout exceeded"))
+      );
+      callback(chan);
+    });
+  }
+
+  async start(): Promise<void> {
+    const fut = once(this.server, "listening");
+    this.server.listen(this.serverOptions);
+    await fut;
+  }
+
+  address(): AddressInfo | string | null {
+    return this.server.address();
+  }
+
+  async stop(): Promise<void> {
+    const fut = once(this.server, "close");
+    this.server.close();
+    await fut;
+  }
+}
+
+export class SocketTransportChannel implements VarlinkTransportChannel {
+  private chunks: Uint8Array[];
+  private messages: Uint8Array[];
+  private error?: Error;
+
+  constructor(private readonly socket: Socket) {
     this.chunks = [];
     this.messages = [];
 
-    this.socket.setTimeout(socketOptions.timeout, () =>
-      this.socket.destroy(new Error("timeout exceeded")),
-    );
     this.socket.on("data", (data) => {
       this.chunks.push(data);
       const index = data.indexOf(0);
@@ -43,11 +99,6 @@ export class SocketTransportChannel implements VarlinkTransportChannel {
     this.socket.on("error", (error) => {
       this.error = error;
     });
-  }
-
-  async connect(): Promise<void> {
-    this.socket.connect(this.socketOptions);
-    await once(this.socket, "connect");
   }
 
   async send(request: Uint8Array): Promise<void> {
@@ -86,7 +137,7 @@ export class SocketTransportChannel implements VarlinkTransportChannel {
       }
 
       const oldChunks = this.chunks.filter(
-        (_, index) => index !== this.chunks.length - 1,
+        (_, index) => index !== this.chunks.length - 1
       );
       const lastChunkPrefix = lastChunk.subarray(0, lastChunkFirstZero);
       this.messages.push(concatArrays([...oldChunks, lastChunkPrefix]));
@@ -96,7 +147,7 @@ export class SocketTransportChannel implements VarlinkTransportChannel {
       } else {
         const lastChunkSuffix = lastChunk.subarray(
           lastChunkFirstZero + 1,
-          lastChunk.length,
+          lastChunk.length
         );
         this.chunks = [lastChunkSuffix];
       }
@@ -108,7 +159,7 @@ export class SocketTransportChannel implements VarlinkTransportChannel {
 function concatArrays(arrays: Uint8Array[]): Uint8Array {
   const totalSize = arrays.reduce(
     (accumulator, array) => accumulator + array.length,
-    0,
+    0
   );
   const merged = new Uint8Array(totalSize);
 

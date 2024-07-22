@@ -26,6 +26,7 @@
     "build": "tsc && eslint . && tsup",
     "test": "bun test",
     "fmt": "eslint --fix .",
+    "pack": "cp README.md package.json LICENSE dist && npm pack ./dist",
     "publish": "cp README.md package.json LICENSE dist && npm publish ./dist"
   }
 }

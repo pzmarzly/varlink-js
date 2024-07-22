@@ -15,4 +15,4 @@ jobs:
           node-version: "20.x"
       - run: npm install
       - run: npm run build
-      - run: npm pack ./dist
+      - run: npm run pack

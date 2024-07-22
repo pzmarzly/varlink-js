@@ -1,6 +1,3 @@
-/* eslint "@typescript-eslint/no-unsafe-assignment": "off" */
-/* eslint "@typescript-eslint/naming-convention": "off" */
-
 import { test, expect } from "bun:test";
 import { SocketTransport } from "../transport/node-socket";
 import { VarlinkClientSideTransport } from "../transport/transport";

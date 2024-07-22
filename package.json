@@ -7,19 +7,11 @@
   "type": "module",
   "devDependencies": {
     "tsup": "^8.1.0",
-    "typescript": "^5.0.0",
-    "xo": "^0.58.0"
+    "typescript": "^5.0.0"
   },
   "scripts": {
-    "build": "xo && tsup",
+    "build": "tsup",
     "test": "bun test",
-    "fmt": "xo --fix"
-  },
-  "xo": {
-    "space": true,
-    "rules": {
-      "import/extensions": "off",
-      "no-await-in-loop": "off"
-    }
+    "fmt": "false"
   }
 }

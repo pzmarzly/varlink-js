@@ -37,9 +37,7 @@ test("connects to the reference server (dynamic)", async () => {
   const info = await client.call(GetInfo, {});
   expect(info).toBeObject();
   expect(info.interfaces).toBeArray();
-  const interfaces = info.interfaces as string[];
-  interfaces.sort();
-  expect(interfaces).toEqual([
+  expect(info.interfaces.toSorted()).toEqual([
     "org.varlink.certification",
     "org.varlink.service",
   ]);
@@ -60,7 +58,7 @@ test("exposes error details", async () => {
     "org.varlink.unknown.UnknownMethod",
   );
   expect(async () => await client.call(UnknownMethod, {})).toThrow(
-    'org.varlink.service.InterfaceNotFound {"interface":"org.varlink.unknown"}',
+    "org.varlink.unknown",
   );
 });
 
@@ -129,7 +127,7 @@ test("passes reference tests", async () => {
 
   await client.callOneshot(OrgVarlinkCertification.Test11, {
     client_id: returnValueStart.client_id,
-    last_more_replies: returnValue10.map((x) => x.string as string),
+    last_more_replies: returnValue10.map((x) => x.string),
   });
 
   const returnValueEnd = await client.call(

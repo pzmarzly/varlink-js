@@ -9,8 +9,9 @@ module.exports = [
   require("eslint-plugin-prettier/recommended"),
   {
     rules: {
-      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/class-methods-use-this": "off",
       "@typescript-eslint/consistent-type-assertions": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
     },
   },
 ];

@@ -1,6 +1,6 @@
 {
   "name": "varlink-js",
-  "module": "index.ts",
+  "version": "0.1.0",
   "files": [
     "dist"
   ],
@@ -16,7 +16,7 @@
     "typescript": "^5.5.3"
   },
   "scripts": {
-    "build": "eslint . && tsup",
+    "build": "tsc && eslint . && tsup",
     "test": "bun test",
     "fmt": "eslint --fix ."
   }

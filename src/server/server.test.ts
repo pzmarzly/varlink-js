@@ -8,7 +8,9 @@ test("transport starts and stops", async () => {
     timeout: 10_000,
     port: 12346,
   });
-  transport.onClientConnected((chan) => console.log(chan));
+  transport.onClientConnected((chan) => {
+    console.log(chan);
+  });
   await transport.start();
   await transport.stop();
 });

@@ -19,14 +19,14 @@ beforeAll(async () => {
   } else {
     const server = new ReferenceServer();
     await server.start();
-    let address = server.address();
-    if (typeof address !== "object") {
+    const address = server.address();
+    if (address === null || typeof address !== "object") {
       throw new Error(`unknown address type ${address}`);
     }
     transport = new SocketClientSideTransport({
       timeout: 10_000,
-      host: address?.address,
-      port: address?.port!,
+      host: address.address,
+      port: address.port,
     });
   }
   client = new VarlinkClient(transport);
@@ -57,10 +57,10 @@ test("connects to the reference server (typed)", async () => {
 
 test("exposes error details", async () => {
   const UnknownMethod = new VarlinkDynamicMethod(
-    "org.varlink.unknown.UnknownMethod"
+    "org.varlink.unknown.UnknownMethod",
   );
   expect(async () => await client.call(UnknownMethod, {})).toThrow(
-    'org.varlink.service.InterfaceNotFound {"interface":"org.varlink.unknown"}'
+    'org.varlink.service.InterfaceNotFound {"interface":"org.varlink.unknown"}',
   );
 });
 
@@ -124,7 +124,7 @@ test("passes reference tests", async () => {
     async (error, data) => {
       expect(error).toBeUndefined();
       returnValue10.push(data);
-    }
+    },
   );
 
   await client.callOneshot(OrgVarlinkCertification.Test11, {
@@ -134,7 +134,7 @@ test("passes reference tests", async () => {
 
   const returnValueEnd = await client.call(
     OrgVarlinkCertification.End,
-    returnValueStart
+    returnValueStart,
   );
   expect(returnValueEnd.all_ok).toBeTrue();
 });

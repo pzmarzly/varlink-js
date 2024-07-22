@@ -4,8 +4,8 @@ import { SocketServerSideTransport } from "../transport/node-socket";
 import { VarlinkServer } from "./server";
 
 export class ReferenceServer {
-  private transport: SocketServerSideTransport;
-  private server: VarlinkServer;
+  private readonly transport: SocketServerSideTransport;
+  private readonly server: VarlinkServer;
 
   constructor() {
     this.transport = new SocketServerSideTransport({

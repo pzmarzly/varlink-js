@@ -22,9 +22,9 @@ export class VarlinkClient {
     await this.#drainPool();
   }
 
-  async call<M extends VarlinkMethod<any, any, any>>(
+  async call<M extends VarlinkMethod<string, any, any>>(
     method: M,
-    input: VarlinkMethodGetInput<M>
+    input: VarlinkMethodGetInput<M>,
   ): Promise<VarlinkMethodGetOutput<M>> {
     const chan = await this.#takeFromPool();
     await chan.send({
@@ -44,9 +44,9 @@ export class VarlinkClient {
     return resp.parameters as VarlinkMethodGetOutput<M>;
   }
 
-  async callOneshot<M extends VarlinkMethod<any, any, any>>(
+  async callOneshot<M extends VarlinkMethod<string, any, any>>(
     method: M,
-    input: VarlinkMethodGetInput<M>
+    input: VarlinkMethodGetInput<M>,
   ): Promise<void> {
     const chan = await this.#takeFromPool();
     await chan.send({
@@ -59,13 +59,13 @@ export class VarlinkClient {
     await this.#backToPool(chan);
   }
 
-  async callStream<M extends VarlinkMethod<any, any, any>>(
+  async callStream<M extends VarlinkMethod<string, any, any>>(
     method: M,
     input: VarlinkMethodGetInput<M>,
     callbackFunction: (
       error: VarlinkError | undefined,
-      data: VarlinkMethodGetOutput<M>
-    ) => Promise<void>
+      data: VarlinkMethodGetOutput<M>,
+    ) => Promise<void>,
   ): Promise<void> {
     const chan = await this.#takeFromPool();
     await chan.send({
@@ -81,12 +81,12 @@ export class VarlinkClient {
       if (resp.error !== undefined) {
         await callbackFunction(
           new VarlinkError(resp.error, resp.parameters),
-          {} as VarlinkMethodGetOutput<M>
+          {} as VarlinkMethodGetOutput<M>,
         );
       } else {
         await callbackFunction(
           undefined,
-          resp.parameters as VarlinkMethodGetOutput<M>
+          resp.parameters as VarlinkMethodGetOutput<M>,
         );
       }
       continues = resp.continues ?? false;
@@ -113,7 +113,7 @@ export class VarlinkClient {
     await Promise.all(
       pool.map(async (chan) => {
         await chan.close();
-      })
+      }),
     );
   }
 }

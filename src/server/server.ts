@@ -1,8 +1,7 @@
 import {
   VarlinkError,
   type VarlinkDictionary,
-  VarlinkMethod,
-  type VarlinkMethodGetName,
+  type VarlinkMethod,
   type VarlinkMethodGetOutput,
   type VarlinkMethodGetInput,
 } from "../protocol/protocol";
@@ -23,16 +22,18 @@ type RegisteredHandler =
         input: VarlinkDictionary,
         callback: (
           output: VarlinkDictionary,
-          continues: boolean
-        ) => Promise<void>
+          continues: boolean,
+        ) => Promise<void>,
       ) => Promise<void>;
     };
 
 export class VarlinkServer {
-  private registeredHandlers = new Map<string, RegisteredHandler>();
+  private readonly registeredHandlers = new Map<string, RegisteredHandler>();
 
   constructor(private readonly transport: VarlinkServerSideTransport) {
-    transport.onClientConnected((chan) => this.#handleClient(chan));
+    transport.onClientConnected((chan) => {
+      void this.#handleClient(chan);
+    });
   }
 
   async start(): Promise<void> {
@@ -43,9 +44,9 @@ export class VarlinkServer {
     await this.transport.stop();
   }
 
-  registerCall<M extends VarlinkMethod<any, any, any>>(
+  registerCall<M extends VarlinkMethod<string, any, any>>(
     method: M,
-    fn: (input: VarlinkMethodGetInput<M>) => Promise<VarlinkMethodGetOutput<M>>
+    fn: (input: VarlinkMethodGetInput<M>) => Promise<VarlinkMethodGetOutput<M>>,
   ): void {
     this.registeredHandlers.set(method.name, {
       type_: "call",
@@ -56,34 +57,34 @@ export class VarlinkServer {
     });
   }
 
-  registerCallOneshot<M extends VarlinkMethod<any, any, any>>(
+  registerCallOneshot<M extends VarlinkMethod<string, any, any>>(
     method: M,
-    fn: (input: VarlinkMethodGetInput<M>) => Promise<void>
+    fn: (input: VarlinkMethodGetInput<M>) => Promise<void>,
   ): void {
     this.registeredHandlers.set(method.name, {
       type_: "callOneshot",
       fn: async (input) => {
         // TODO: Validate input.
-        return await fn(input as VarlinkMethodGetInput<M>);
+        await fn(input as VarlinkMethodGetInput<M>);
       },
     });
   }
 
-  registerCallStream<M extends VarlinkMethod<any, any, any>>(
+  registerCallStream<M extends VarlinkMethod<string, any, any>>(
     method: M,
     fn: (
       input: VarlinkMethodGetInput<M>,
       callback: (
         output: VarlinkMethodGetOutput<M>,
-        continues: boolean
-      ) => Promise<void>
-    ) => Promise<void>
+        continues: boolean,
+      ) => Promise<void>,
+    ) => Promise<void>,
   ): void {
     this.registeredHandlers.set(method.name, {
       type_: "callStream",
       fn: async (input, callback) => {
         // TODO: Validate input.
-        return await fn(input as VarlinkMethodGetInput<M>, callback);
+        await fn(input as VarlinkMethodGetInput<M>, callback);
       },
     });
   }
@@ -93,10 +94,7 @@ export class VarlinkServer {
       const request = await chan.recv();
       const handler = this.registeredHandlers.get(request.method);
       if (handler === undefined) {
-        await this.#sendErr(
-          chan,
-          new Error(`unknown method ${request.method}`)
-        );
+        await sendErr(chan, new Error(`unknown method ${request.method}`));
         continue;
       }
 
@@ -110,11 +108,11 @@ export class VarlinkServer {
       }
 
       if (handler.type_ !== requestedHandlerType) {
-        await this.#sendErr(
+        await sendErr(
           chan,
           new Error(
-            `method ${request.method} is a ${handler.type_}, not a ${requestedHandlerType}`
-          )
+            `method ${request.method} is a ${handler.type_}, not a ${requestedHandlerType}`,
+          ),
         );
         continue;
       }
@@ -130,55 +128,53 @@ export class VarlinkServer {
           await handler.fn(
             request.parameters,
             async (parameters, continues) => {
-              await this.#sendOk(chan, parameters, continues);
-            }
+              await sendOk(chan, parameters, continues);
+            },
           );
         } catch (e) {
           console.warn(e);
-          if (!(e instanceof Error)) throw e;
-          await this.#sendErr(chan, e);
+          if (e instanceof Error) await sendErr(chan, e);
         }
       } else if (handler.type_ === "call") {
         try {
-          let output = await handler.fn(request.parameters);
-          await this.#sendOk(chan, output, false);
+          const output = await handler.fn(request.parameters);
+          await sendOk(chan, output, false);
         } catch (e) {
           console.warn(e);
-          if (!(e instanceof Error)) throw e;
-          await this.#sendErr(chan, e);
+          if (e instanceof Error) await sendErr(chan, e);
         }
       }
     }
   }
+}
 
-  async #sendOk(
-    chan: VarlinkServerSideTransportChannel,
-    parameters: VarlinkDictionary,
-    continues: boolean
-  ): Promise<void> {
+async function sendOk(
+  chan: VarlinkServerSideTransportChannel,
+  parameters: VarlinkDictionary,
+  continues: boolean,
+): Promise<void> {
+  await chan.send({
+    error: undefined,
+    parameters,
+    continues,
+  });
+}
+
+async function sendErr(
+  chan: VarlinkServerSideTransportChannel,
+  error: Error,
+): Promise<void> {
+  if (error instanceof VarlinkError) {
     await chan.send({
-      error: undefined,
-      parameters,
-      continues,
+      error: error.type_,
+      parameters: error.parameters,
+      continues: undefined,
     });
-  }
-
-  async #sendErr(
-    chan: VarlinkServerSideTransportChannel,
-    error: Error
-  ): Promise<void> {
-    if (error instanceof VarlinkError) {
-      await chan.send({
-        error: error.type_,
-        parameters: error.parameters,
-        continues: undefined,
-      });
-    } else {
-      await chan.send({
-        error: "org.varlink.service.InvalidParameter",
-        parameters: { parameter: error.toString() },
-        continues: undefined,
-      });
-    }
+  } else {
+    await chan.send({
+      error: "org.varlink.service.InvalidParameter",
+      parameters: { parameter: error.toString() },
+      continues: undefined,
+    });
   }
 }

@@ -51,7 +51,7 @@ export interface VarlinkClientSideTransport {
 
 export interface VarlinkServerSideTransport {
   onClientConnected: (
-    callback: (chan: VarlinkServerSideTransportChannel) => void
+    callback: (chan: VarlinkServerSideTransportChannel) => void,
   ) => void;
   start: () => Promise<void>;
   stop: () => Promise<void>;

@@ -5,6 +5,7 @@ export default defineConfig({
     "src/client/client.ts",
     "src/protocol/protocol.ts",
     "src/schemas/org.varlink.certification.varlink.ts",
+    "src/schemas/org.varlink.resolver.varlink.ts",
     "src/schemas/org.varlink.service.varlink.ts",
     "src/server/server.ts",
     "src/transport/node-socket.ts",

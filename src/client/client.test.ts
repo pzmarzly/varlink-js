@@ -6,6 +6,8 @@ import { SocketTransport } from "../transport/node-socket";
 import { VarlinkClient } from "./client";
 import { VarlinkClientSideTransport } from "../transport/transport";
 
+// cd varlink-python
+// python3 -m varlink.tests.test_certification --varlink=tcp:127.0.0.1:12345
 function getClient(): VarlinkClient {
   const transport = new SocketTransport({
     host: "127.0.0.1",

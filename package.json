@@ -1,9 +1,6 @@
 {
   "name": "varlink-js",
   "version": "0.1.0",
-  "files": [
-    "dist"
-  ],
   "type": "module",
   "devDependencies": {
     "@types/bun": "^1.1.6",
@@ -16,7 +13,7 @@
     "typescript": "^5.5.3"
   },
   "scripts": {
-    "build": "tsc && eslint . && tsup",
+    "build": "tsc && eslint . && tsup && cp package.json LICENSE dist",
     "test": "bun test",
     "fmt": "eslint --fix ."
   }

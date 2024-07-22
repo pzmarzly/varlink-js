@@ -6,6 +6,7 @@
 - ✅ type-safe
 - ✅ async-first
 - ✅ connection pooling
+- ✅ compatible with Node.js and Bun.sh
 - ❌ no input validation
 - ❌ no parsing and generating of schema IDL
 - ❌ writing servers is a bit clunky (you have to implement `org.varlink.service` by hand)

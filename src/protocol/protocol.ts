@@ -54,15 +54,15 @@ export function serializeVarlinkRequest(request: VarlinkRequest): Uint8Array {
     partial.parameters = request.parameters;
   }
 
-  if (request.oneway !== undefined) {
+  if (request.oneway) {
     partial.oneway = request.oneway;
   }
 
-  if (request.more !== undefined) {
+  if (request.more) {
     partial.more = request.more;
   }
 
-  if (request.upgrade !== undefined) {
+  if (request.upgrade) {
     partial.upgrade = request.upgrade;
   }
 
@@ -103,7 +103,7 @@ export function serializeVarlinkResponse(
     partial.error = response.error;
   }
 
-  if (response.continues !== undefined) {
+  if (response.continues === true) {
     partial.continues = response.continues;
   }
 

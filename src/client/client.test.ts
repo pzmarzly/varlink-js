@@ -9,11 +9,11 @@ import { ReferenceServer } from "../server/reference-server.ts";
 let client: VarlinkClient;
 beforeAll(async () => {
   let transport;
-  if (process.env.CERTIFICATION_PORT !== undefined) {
+  if (process.env.PORT !== undefined) {
     transport = new SocketClientSideTransport({
       host: "127.0.0.1",
       // python3 -m varlink.tests.test_certification --varlink=tcp:127.0.0.1:12345
-      port: Number(process.env.CERTIFICATION_PORT),
+      port: Number(process.env.PORT),
       timeout: 10_000,
     });
   } else {

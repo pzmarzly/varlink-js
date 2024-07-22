@@ -7,11 +7,12 @@
 - ✅ async-first
 - ✅ connection pooling
 - ✅ compatible with Node.js and Bun.sh
+- ✅ supports TCP and Unix sockets
 - ❌ no input validation
 - ❌ no parsing and generating of schema IDL
 - ❌ writing servers is a bit clunky (you have to implement `org.varlink.service` by hand)
 - ❌ no socket activation
-- ❌ no proxy mode
+- ❌ no proxy mode or HTTP mode (but should be easy to add)
 
 ## Usage
 
@@ -70,7 +71,7 @@ await server.start();
 console.log(transport.address());
 ```
 
-See [`client.test.ts`](src/client/client.test.ts) and [`server.test.ts`](src/server/server.test.ts) for full usage.
+See [`client.test.ts`](src/client/client.test.ts) and [`reference-server.ts`](src/server/reference-server.ts) for full usage.
 
 ## Certification
 

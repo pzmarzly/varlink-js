@@ -29,7 +29,7 @@ if (process.env.PORT !== undefined) {
     port: address.port,
   });
 }
-let client = new VarlinkClient(transport);
+const client = new VarlinkClient(transport);
 
 await test("connects to the reference server (dynamic)", async () => {
   const GetInfo = new VarlinkDynamicMethod("org.varlink.service.GetInfo");
@@ -54,9 +54,12 @@ await test("connects to the reference server (typed)", async () => {
 
 await test("exposes error details", async () => {
   const UnknownMethod = new VarlinkDynamicMethod(
-    "org.varlink.unknown.UnknownMethod"
+    "org.varlink.unknown.UnknownMethod",
   );
-  assert.rejects(() => client.call(UnknownMethod, {}), /org.varlink.unknown/);
+  await assert.rejects(
+    async () => await client.call(UnknownMethod, {}),
+    /org.varlink.unknown/,
+  );
 });
 
 await test("passes reference tests", async () => {
@@ -119,7 +122,7 @@ await test("passes reference tests", async () => {
     async (error, data) => {
       assert.equal(error, undefined);
       returnValue10.push(data);
-    }
+    },
   );
 
   await client.callOneshot(OrgVarlinkCertification.Test11, {
@@ -129,7 +132,7 @@ await test("passes reference tests", async () => {
 
   const returnValueEnd = await client.call(
     OrgVarlinkCertification.End,
-    returnValueStart
+    returnValueStart,
   );
   assert.equal(returnValueEnd.all_ok, true);
 });

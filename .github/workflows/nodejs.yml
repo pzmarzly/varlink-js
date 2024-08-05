@@ -1,4 +1,4 @@
-name: Build on Node.js
+name: Build and test on Node.js
 
 on:
   pull_request:
@@ -15,4 +15,5 @@ jobs:
           node-version: "20.x"
       - run: npm install
       - run: npm run build
+      - run: npm run test --node
       - run: npm run pack

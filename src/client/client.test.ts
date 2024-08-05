@@ -1,4 +1,4 @@
-import { test, expect, beforeAll } from "bun:test";
+import { test, assert } from "poku";
 import { SocketClientSideTransport } from "../transport/node-socket";
 import { VarlinkDynamicMethod } from "../protocol/protocol";
 import { OrgVarlinkService } from "../schemas/org.varlink.service.varlink.ts";
@@ -6,63 +6,60 @@ import { VarlinkClient } from "./client";
 import { OrgVarlinkCertification } from "../schemas/org.varlink.certification.varlink.ts";
 import { ReferenceServer } from "../server/reference-server.ts";
 
-let client: VarlinkClient;
-beforeAll(async () => {
-  let transport;
-  if (process.env.PORT !== undefined) {
-    transport = new SocketClientSideTransport({
-      host: "127.0.0.1",
-      // python3 -m varlink.tests.test_certification --varlink=tcp:127.0.0.1:12345
-      port: Number(process.env.PORT),
-      timeout: 10_000,
-    });
-  } else {
-    const server = new ReferenceServer();
-    await server.start();
-    const address = server.address();
-    if (address === null || typeof address !== "object") {
-      throw new Error(`unknown address type ${address}`);
-    }
-    transport = new SocketClientSideTransport({
-      timeout: 10_000,
-      host: address.address,
-      port: address.port,
-    });
+let server: ReferenceServer | undefined;
+let transport: SocketClientSideTransport;
+if (process.env.PORT !== undefined) {
+  server = undefined;
+  transport = new SocketClientSideTransport({
+    host: "127.0.0.1",
+    // python3 -m varlink.tests.test_certification --varlink=tcp:127.0.0.1:12345
+    port: Number(process.env.PORT),
+    timeout: 10_000,
+  });
+} else {
+  server = new ReferenceServer();
+  await server.start();
+  const address = server.address();
+  if (address === null || typeof address !== "object") {
+    throw new Error(`unknown address type ${address}`);
   }
-  client = new VarlinkClient(transport);
-});
+  transport = new SocketClientSideTransport({
+    timeout: 10_000,
+    host: address.address,
+    port: address.port,
+  });
+}
+let client = new VarlinkClient(transport);
 
-test("connects to the reference server (dynamic)", async () => {
+await test("connects to the reference server (dynamic)", async () => {
   const GetInfo = new VarlinkDynamicMethod("org.varlink.service.GetInfo");
   const info = await client.call(GetInfo, {});
-  expect(info).toBeObject();
-  expect(info.interfaces).toBeArray();
-  expect(info.interfaces.toSorted()).toEqual([
+  const interfaces = info.interfaces;
+  interfaces.sort();
+  assert.deepEqual(interfaces, [
     "org.varlink.certification",
     "org.varlink.service",
   ]);
 });
 
-test("connects to the reference server (typed)", async () => {
+await test("connects to the reference server (typed)", async () => {
   const info = await client.call(OrgVarlinkService.GetInfo, {});
   const interfaces = info.interfaces;
   interfaces.sort();
-  expect(interfaces).toEqual([
+  assert.deepEqual(interfaces, [
     "org.varlink.certification",
     "org.varlink.service",
   ]);
 });
 
-test("exposes error details", async () => {
+await test("exposes error details", async () => {
   const UnknownMethod = new VarlinkDynamicMethod(
-    "org.varlink.unknown.UnknownMethod",
+    "org.varlink.unknown.UnknownMethod"
   );
-  expect(async () => await client.call(UnknownMethod, {})).toThrow(
-    "org.varlink.unknown",
-  );
+  assert.rejects(() => client.call(UnknownMethod, {}), /org.varlink.unknown/);
 });
 
-test("passes reference tests", async () => {
+await test("passes reference tests", async () => {
   const returnValueStart = await client.call(OrgVarlinkCertification.Start, {});
 
   const returnValue01 = await client.call(OrgVarlinkCertification.Test01, {
@@ -120,9 +117,9 @@ test("passes reference tests", async () => {
       mytype: returnValue09.mytype,
     },
     async (error, data) => {
-      expect(error).toBeUndefined();
+      assert.equal(error, undefined);
       returnValue10.push(data);
-    },
+    }
   );
 
   await client.callOneshot(OrgVarlinkCertification.Test11, {
@@ -132,7 +129,12 @@ test("passes reference tests", async () => {
 
   const returnValueEnd = await client.call(
     OrgVarlinkCertification.End,
-    returnValueStart,
+    returnValueStart
   );
-  expect(returnValueEnd.all_ok).toBeTrue();
+  assert.equal(returnValueEnd.all_ok, true);
+});
+
+await test("disconnects", async () => {
+  await client.disconnect();
+  await server?.stop();
 });

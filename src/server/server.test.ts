@@ -1,9 +1,9 @@
-import { test } from "bun:test";
+import { test } from "poku";
 import { SocketServerSideTransport } from "../transport/node-socket";
 import { VarlinkServer } from "./server";
 import { OrgVarlinkService } from "../schemas/org.varlink.service.varlink.ts";
 
-test("transport starts and stops", async () => {
+await test("transport starts and stops", async () => {
   const transport = new SocketServerSideTransport({
     timeout: 10_000,
     port: 12346,
@@ -15,7 +15,7 @@ test("transport starts and stops", async () => {
   await transport.stop();
 });
 
-test("server starts and stops", async () => {
+await test("server starts and stops", async () => {
   const transport = new SocketServerSideTransport({
     timeout: 10_000,
     port: 12346,
@@ -25,7 +25,7 @@ test("server starts and stops", async () => {
   await server.stop();
 });
 
-test("serves interface", async () => {
+await test("serves interface", async () => {
   const transport = new SocketServerSideTransport({
     timeout: 10_000,
     port: 12346,

@@ -19,12 +19,14 @@
     "eslint-config-love": "^56.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "poku": "^2.4.0",
     "tsup": "^8.2.2",
+    "tsx": "^4.16.5",
     "typescript": "^5.5.3"
   },
   "scripts": {
     "build": "tsc && eslint . && tsup",
-    "test": "bun test",
+    "test": "poku",
     "fmt": "eslint --fix .",
     "pack": "cp README.md package.json LICENSE dist && npm pack ./dist",
     "publish": "cp README.md package.json LICENSE dist && npm publish ./dist"
